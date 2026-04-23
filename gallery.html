@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gallery — Not2BeeHonest</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐝</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<nav class="nav-glass">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo"><span class="nav-logo-icon">🐝</span><span>Not2BeeHonest</span></a>
+    <div class="nav-links">
+      <a href="blog.html"    class="nav-link">Blog</a>
+      <a href="gallery.html" class="nav-link active">Gallery</a>
+      <a href="music.html"   class="nav-link">Music</a>
+      <a href="admin.html"   class="nav-link nav-write">✦ Write</a>
+    </div>
+    <button class="nav-menu-btn" id="menuBtn">☰</button>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="blog.html">Blog</a>
+  <a href="gallery.html">Gallery</a>
+  <a href="music.html">Music</a>
+  <a href="admin.html">✦ Write</a>
+</div>
+
+<div class="page-wrapper">
+  <div class="container">
+
+    <div class="page-header reveal">
+      <div class="section-label">// visual.log</div>
+      <h1 class="section-title">Gallery</h1>
+      <p class="section-desc">Photos, memes, AI art — the visual noise in my head, organized into a grid.</p>
+      <div class="divider"></div>
+    </div>
+
+    <!-- Filter Buttons -->
+    <div class="gallery-filter-btns reveal" id="galleryFilters">
+      <button class="gallery-filter-btn active" onclick="setFilter('all')">All</button>
+      <button class="gallery-filter-btn" onclick="setFilter('photo')">📷 Photos</button>
+      <button class="gallery-filter-btn" onclick="setFilter('meme')">😅 Memes</button>
+      <button class="gallery-filter-btn" onclick="setFilter('ai-art')">🤖 AI Art</button>
+    </div>
+
+    <!-- Masonry Grid -->
+    <div class="gallery-masonry" id="galleryGrid">
+      <div style="color:var(--t4);font-size:.9rem;padding:3rem 0">Loading gallery…</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox(event)">
+  <div class="lightbox-inner" id="lightboxInner">
+    <button class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img class="lightbox-img" id="lightboxImg" src="" alt="">
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand"><span>🐝</span><span>Not2BeeHonest</span></div>
+      <div class="footer-bottom"><span>Built with curiosity &amp; caffeine</span></div>
+    </div>
+  </div>
+</footer>
+
+<button class="scroll-top" aria-label="Scroll to top">↑</button>
+
+<script src="js/particles.js"></script>
+<script src="js/app.js"></script>
+<script>
+  let allItems = [];
+  let activeFilter = 'all';
+
+  async function init() {
+    const data = await loadData('data/gallery.json');
+    if (!data || !data.items) { document.getElementById('galleryGrid').innerHTML = '<div class="empty-state"><div class="empty-state-icon">🖼</div><p class="empty-state-text">No items yet. <a href="admin.html">Add some!</a></p></div>'; return; }
+    allItems = data.items.sort((a, b) => new Date(b.date) - new Date(a.date));
+    renderGallery(allItems);
+  }
+
+  function setFilter(type) {
+    activeFilter = type;
+    document.querySelectorAll('.gallery-filter-btn').forEach(b => {
+      b.classList.toggle('active', b.textContent.replace(/[^a-z-]/gi,'').toLowerCase().trim() === type || (type==='all' && b.textContent.trim()==='All'));
+    });
+    const filtered = type === 'all' ? allItems : allItems.filter(i => i.type === type);
+    renderGallery(filtered);
+  }
+
+  function renderGallery(items) {
+    const el = document.getElementById('galleryGrid');
+    if (!items.length) {
+      el.innerHTML = '<div class="empty-state" style="padding:3rem 0;text-align:center"><div class="empty-state-icon">🔍</div><p class="empty-state-text">Nothing here yet.</p></div>';
+      return;
+    }
+    el.innerHTML = items.map((item, i) => `
+      <div class="gallery-item reveal" style="animation-delay:${i * 0.04}s" onclick="openLightbox('${item.src || ''}', '${escAttr(item.title)}', '${escAttr(item.caption || '')}')">
+        <div class="gallery-type-badge">${item.type}</div>
+        ${item.src
+          ? `<img src="${item.src}" alt="${item.title}" loading="lazy">`
+          : `<div class="gallery-placeholder" style="padding-bottom:${55 + Math.random()*30}%">
+               <div class="gallery-placeholder-content">
+                 <div class="gallery-placeholder-emoji">${item.emoji || '🖼'}</div>
+                 <div style="font-size:.75rem;color:var(--t4);padding:0 .5rem">${item.title}</div>
+               </div>
+             </div>`}
+        <div class="gallery-overlay">
+          <div class="gallery-overlay-title">${item.title}</div>
+          ${item.caption ? `<div style="font-size:.78rem;color:var(--t3)">${item.caption}</div>` : ''}
+          <div style="margin-top:.4rem;display:flex;flex-wrap:wrap;gap:.3rem">
+            ${(item.tags||[]).map(t=>`<span class="tag" style="font-size:.65rem">${t}</span>`).join('')}
+          </div>
+        </div>
+      </div>`).join('');
+
+    // Re-run reveal observer
+    document.querySelectorAll('.gallery-item.reveal').forEach(el => {
+      if (!el.classList.contains('visible')) el.classList.add('visible');
+    });
+  }
+
+  function escAttr(s) { return (s||'').replace(/'/g, '&#39;').replace(/"/g, '&quot;'); }
+
+  function openLightbox(src, title, caption) {
+    if (!src) return;
+    const lb = document.getElementById('lightbox');
+    document.getElementById('lightboxImg').src = src;
+    document.getElementById('lightboxCaption').innerHTML = `<strong style="color:var(--t0)">${title}</strong>${caption ? '<br><span style="color:var(--t3)">' + caption + '</span>' : ''}`;
+    lb.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox(e) {
+    if (e && e.target !== document.getElementById('lightbox') && !e.target.classList.contains('lightbox-close')) return;
+    document.getElementById('lightbox').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox({ target: document.getElementById('lightbox') }); });
+
+  init();
+</script>
+</body>
+</html>

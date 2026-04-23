@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Not2BeeHonest</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐝</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<!-- Password Gate -->
+<div class="admin-gate" id="adminGate">
+  <div class="admin-login-card">
+    <div class="admin-login-icon">🔐</div>
+    <h1 class="admin-login-title">Admin Panel</h1>
+    <p class="admin-login-sub">Enter your password to access the writing panel.</p>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input type="password" class="form-input" id="pwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPw()">
+      <div class="form-error" id="pwError">Incorrect password</div>
+    </div>
+    <button class="btn btn-primary" style="width:100%" onclick="checkPw()">Enter</button>
+    <p style="font-size:.72rem;color:var(--t4);margin-top:1rem">Default password: <code style="color:var(--a1)">not2bee</code><br>Change in <code style="color:var(--a1)">data/config.json</code> (update hash)</p>
+  </div>
+</div>
+
+<!-- Admin UI (hidden until auth) -->
+<div class="admin-layout" id="adminPanel">
+  <nav class="nav-glass">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo"><span class="nav-logo-icon">🐝</span><span>Not2BeeHonest</span></a>
+      <div class="nav-links">
+        <a href="blog.html"    class="nav-link">Blog</a>
+        <a href="gallery.html" class="nav-link">Gallery</a>
+        <a href="music.html"   class="nav-link">Music</a>
+        <span class="nav-link nav-write" style="cursor:default;opacity:.7">✦ Admin</span>
+      </div>
+      <button class="nav-menu-btn" id="menuBtn">☰</button>
+    </div>
+  </nav>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="blog.html">Blog</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="music.html">Music</a>
+  </div>
+
+  <div class="container">
+    <div class="admin-header">
+      <div class="admin-title">✦ Writing Panel</div>
+      <p style="font-size:.85rem;color:var(--t4)">Create or edit content, then export the JSON files and commit them to your repo.</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+      <button class="admin-tab active" onclick="switchTab('posts')">✍ Posts</button>
+      <button class="admin-tab"        onclick="switchTab('gallery')">🖼 Gallery</button>
+      <button class="admin-tab"        onclick="switchTab('music')">🎵 Music</button>
+      <button class="admin-tab"        onclick="switchTab('thoughts')">💭 Thoughts</button>
+    </div>
+
+    <!-- ── POSTS TAB ─────────────────────────────────────────── -->
+    <div class="admin-tab-content active" id="tab-posts">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+        <div class="admin-section-title">All Posts</div>
+        <button class="btn btn-primary btn-sm" onclick="newPost()">+ New Post</button>
+      </div>
+      <div class="admin-posts-list" id="adminPostList"></div>
+
+      <!-- Post Editor -->
+      <div id="postEditor" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem">
+          <div class="admin-section-title" id="editorTitle">New Post</div>
+          <button class="btn btn-ghost btn-sm" onclick="cancelEdit()">Cancel</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Title *</label>
+            <input type="text" class="form-input" id="postTitle" placeholder="Your post title">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-input" id="postDate">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Tags (comma-separated)</label>
+            <input type="text" class="form-input" id="postTags" placeholder="nature, AI, science">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Cover Emoji</label>
+            <input type="text" class="form-input" id="postEmoji" placeholder="🌿">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Cover Image URL (optional)</label>
+            <input type="text" class="form-input" id="postCover" placeholder="https://...">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Excerpt *</label>
+          <input type="text" class="form-input" id="postExcerpt" placeholder="One-sentence summary">
+        </div>
+
+        <!-- Markdown Editor -->
+        <div class="form-group">
+          <label class="form-label">Content (Markdown)</label>
+          <div class="editor-toolbar">
+            <button class="editor-tool-btn" onclick="insertMd('**', '**')"><b>B</b></button>
+            <button class="editor-tool-btn" onclick="insertMd('*', '*')"><i>I</i></button>
+            <button class="editor-tool-btn" onclick="insertMd('# ', '')">H1</button>
+            <button class="editor-tool-btn" onclick="insertMd('## ', '')">H2</button>
+            <button class="editor-tool-btn" onclick="insertMd('### ', '')">H3</button>
+            <button class="editor-tool-btn" onclick="insertMd('> ', '')">"</button>
+            <button class="editor-tool-btn" onclick="insertMd('`', '`')">code</button>
+            <button class="editor-tool-btn" onclick="insertMd('```\n', '\n```')">block</button>
+            <button class="editor-tool-btn" onclick="insertMd('[', '](url)')">link</button>
+            <button class="editor-tool-btn" onclick="insertMd('- ', '')">list</button>
+            <button class="editor-tool-btn" onclick="insertMd('---\n', '')">hr</button>
+          </div>
+          <div class="editor-layout">
+            <div class="editor-pane">
+              <div class="editor-pane-header"><div class="editor-pane-dot"></div>markdown</div>
+              <textarea class="editor-textarea" id="postContent" placeholder="# Your post title&#10;&#10;Write your post in Markdown..." oninput="updatePreview()"></textarea>
+            </div>
+            <div class="editor-pane">
+              <div class="editor-pane-header"><div class="editor-pane-dot" style="background:var(--a3)"></div>preview</div>
+              <div class="editor-preview md-content" id="postPreview"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1rem">
+          <button class="btn btn-ghost" onclick="cancelEdit()">Cancel</button>
+          <button class="btn btn-primary" onclick="savePost()">Save Post</button>
+        </div>
+      </div>
+
+      <!-- Export -->
+      <div class="export-section">
+        <div class="export-title">// EXPORT_WORKFLOW</div>
+        <p class="export-desc">Download the updated JSON file, replace <code style="color:var(--a1)">data/blogs.json</code> in your repo, and push to GitHub. The site will update automatically.</p>
+        <div class="export-btns">
+          <button class="btn btn-ghost btn-sm" onclick="exportBlogs()">↓ Export blogs.json</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── GALLERY TAB ───────────────────────────────────────── -->
+    <div class="admin-tab-content" id="tab-gallery">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+        <div class="admin-section-title">Gallery Items</div>
+        <button class="btn btn-primary btn-sm" onclick="toggleGalleryForm(true)">+ Add Item</button>
+      </div>
+
+      <!-- Add Form -->
+      <div id="galleryForm" style="display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem;margin-bottom:1.5rem">
+        <div class="admin-section-title" style="margin-bottom:1rem">Add Gallery Item</div>
+        <div class="admin-form-grid">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Title *</label>
+            <input type="text" class="form-input" id="gTitle" placeholder="Forest Fractals">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Type</label>
+            <select class="form-input" id="gType">
+              <option value="photo">📷 Photo</option>
+              <option value="meme">😅 Meme</option>
+              <option value="ai-art">🤖 AI Art</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Emoji (placeholder)</label>
+            <input type="text" class="form-input" id="gEmoji" placeholder="🌿">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Image URL (optional)</label>
+            <input type="text" class="form-input" id="gSrc" placeholder="https://... or assets/gallery/...">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Tags (comma-separated)</label>
+            <input type="text" class="form-input" id="gTags" placeholder="nature, fractals">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Caption</label>
+            <input type="text" class="form-input" id="gCaption" placeholder="Short description or thought">
+          </div>
+        </div>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1rem">
+          <button class="btn btn-ghost btn-sm" onclick="toggleGalleryForm(false)">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="addGalleryItem()">Add Item</button>
+        </div>
+      </div>
+
+      <div class="admin-posts-list" id="adminGalleryList"></div>
+
+      <div class="export-section">
+        <div class="export-title">// EXPORT_WORKFLOW</div>
+        <p class="export-desc">Export and commit <code style="color:var(--a1)">data/gallery.json</code> to update the gallery.</p>
+        <div class="export-btns">
+          <button class="btn btn-ghost btn-sm" onclick="exportGallery()">↓ Export gallery.json</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MUSIC TAB ─────────────────────────────────────────── -->
+    <div class="admin-tab-content" id="tab-music">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+        <div class="admin-section-title">Music Tracks</div>
+        <button class="btn btn-primary btn-sm" onclick="toggleMusicForm(true)">+ Add Track</button>
+      </div>
+
+      <div id="musicForm" style="display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem;margin-bottom:1.5rem">
+        <div class="admin-section-title" style="margin-bottom:1rem">Add Track</div>
+        <div class="admin-form-grid">
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Song Title *</label>
+            <input type="text" class="form-input" id="mTitle" placeholder="Redbone">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Artist *</label>
+            <input type="text" class="form-input" id="mArtist" placeholder="Childish Gambino">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Album</label>
+            <input type="text" class="form-input" id="mAlbum" placeholder="Awaken, My Love!">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Year</label>
+            <input type="number" class="form-input" id="mYear" placeholder="2016">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Emoji</label>
+            <input type="text" class="form-input" id="mEmoji" placeholder="🎵">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Tags (comma-separated)</label>
+            <input type="text" class="form-input" id="mTags" placeholder="soul, funk">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">Spotify URL</label>
+            <input type="text" class="form-input" id="mSpotify" placeholder="https://open.spotify.com/track/...">
+          </div>
+          <div class="form-group" style="margin:0">
+            <label class="form-label">YouTube URL</label>
+            <input type="text" class="form-input" id="mYoutube" placeholder="https://youtube.com/watch?v=...">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:1rem">
+          <label class="form-label">Your Note (why this song?)</label>
+          <textarea class="form-input form-textarea" id="mNote" placeholder="That late-night ceiling-staring kind of song..." style="min-height:80px"></textarea>
+        </div>
+        <div style="display:flex;gap:.75rem;justify-content:flex-end;margin-top:1rem">
+          <button class="btn btn-ghost btn-sm" onclick="toggleMusicForm(false)">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="addTrack()">Add Track</button>
+        </div>
+      </div>
+
+      <div class="admin-posts-list" id="adminMusicList"></div>
+
+      <div class="export-section">
+        <div class="export-title">// EXPORT_WORKFLOW</div>
+        <p class="export-desc">Export and commit <code style="color:var(--a1)">data/music.json</code> to update the music section.</p>
+        <div class="export-btns">
+          <button class="btn btn-ghost btn-sm" onclick="exportMusic()">↓ Export music.json</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── THOUGHTS TAB ──────────────────────────────────────── -->
+    <div class="admin-tab-content" id="tab-thoughts">
+      <div class="admin-section-title" style="margin-bottom:1rem">Random Thoughts</div>
+      <p style="font-size:.875rem;color:var(--t4);margin-bottom:1.5rem">These appear randomly on the homepage. Add one per line.</p>
+      <div class="form-group">
+        <label class="form-label">All Thoughts (one per line)</label>
+        <textarea class="form-input form-textarea" id="thoughtsInput" style="min-height:300px;font-family:var(--font-mono);font-size:.85rem;line-height:1.8"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="saveThoughts()">Save Thoughts</button>
+      <div class="export-section" style="margin-top:2rem">
+        <div class="export-title">// EXPORT_WORKFLOW</div>
+        <p class="export-desc">Export and commit <code style="color:var(--a1)">data/config.json</code> to update the random thoughts.</p>
+        <div class="export-btns">
+          <button class="btn btn-ghost btn-sm" onclick="exportConfig()">↓ Export config.json</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /container -->
+</div><!-- /admin-layout -->
+
+<script src="js/particles.js"></script>
+<script src="js/app.js"></script>
+<script>
+/* ── Password ───────────────────────────────────────────────── */
+// Default password: "not2bee"
+// SHA-256 hash stored in config.json. Change it there.
+const DEFAULT_HASH = '0905fa5e8ca65374e5ea84b90d1e6a5a185e1f0518ff3e96bca10f069c29257f';
+
+async function checkPw() {
+  const pw = document.getElementById('pwInput').value;
+  if (!pw) return;
+
+  let expectedHash;
+  try {
+    const cfg = await loadData('data/config.json');
+    expectedHash = cfg?.admin?.passwordHash || DEFAULT_HASH;
+  } catch { expectedHash = DEFAULT_HASH; }
+
+  const hash = await sha256(pw);
+  if (hash === expectedHash) {
+    document.getElementById('adminGate').style.display   = 'none';
+    document.getElementById('adminPanel').classList.add('active');
+    loadAdminData();
+  } else {
+    document.getElementById('pwError').classList.add('visible');
+    document.getElementById('pwInput').value = '';
+  }
+}
+
+/* ── State ──────────────────────────────────────────────────── */
+let postsData    = { posts: [] };
+let galleryData  = { items: [] };
+let musicData    = { tracks: [] };
+let configData   = { site: {}, admin: {}, thoughts: [] };
+let editingPostId = null;
+
+async function loadAdminData() {
+  postsData   = await loadData('data/blogs.json')   || { posts: [] };
+  galleryData = await loadData('data/gallery.json') || { items: [] };
+  musicData   = await loadData('data/music.json')   || { tracks: [] };
+  configData  = await loadData('data/config.json')  || { site: {}, admin: {}, thoughts: [] };
+
+  renderAdminPosts();
+  renderAdminGallery();
+  renderAdminMusic();
+  renderAdminThoughts();
+}
+
+/* ── Tabs ───────────────────────────────────────────────────── */
+function switchTab(name) {
+  document.querySelectorAll('.admin-tab').forEach((b, i) => b.classList.toggle('active', ['posts','gallery','music','thoughts'][i] === name));
+  document.querySelectorAll('.admin-tab-content').forEach(d => d.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+/* ── Posts ──────────────────────────────────────────────────── */
+function renderAdminPosts() {
+  const el = document.getElementById('adminPostList');
+  if (!postsData.posts.length) { el.innerHTML = '<div style="color:var(--t4);font-size:.85rem;padding:.5rem 0">No posts yet.</div>'; return; }
+  el.innerHTML = postsData.posts.map(p => `
+    <div class="admin-post-item">
+      <span class="admin-post-title">${p.coverEmoji || '📖'} ${p.title}</span>
+      <span class="admin-post-date">${fmtDate(p.date)}</span>
+      <div class="admin-post-actions">
+        <button class="admin-action-btn" onclick="editPost('${p.id}')">Edit</button>
+        <button class="admin-action-btn" onclick="window.open('post.html?id=${p.id}','_blank')">View</button>
+        <button class="admin-action-btn danger" onclick="deletePost('${p.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function newPost() {
+  editingPostId = null;
+  document.getElementById('editorTitle').textContent = 'New Post';
+  document.getElementById('postTitle').value   = '';
+  document.getElementById('postDate').value    = new Date().toISOString().split('T')[0];
+  document.getElementById('postTags').value    = '';
+  document.getElementById('postEmoji').value   = '';
+  document.getElementById('postCover').value   = '';
+  document.getElementById('postExcerpt').value = '';
+  document.getElementById('postContent').value = '';
+  document.getElementById('postPreview').innerHTML = '';
+  document.getElementById('postEditor').style.display = 'block';
+  document.getElementById('postEditor').scrollIntoView({ behavior: 'smooth' });
+}
+
+function editPost(id) {
+  const post = postsData.posts.find(p => p.id === id);
+  if (!post) return;
+  editingPostId = id;
+  document.getElementById('editorTitle').textContent = 'Edit Post';
+  document.getElementById('postTitle').value   = post.title || '';
+  document.getElementById('postDate').value    = post.date  || '';
+  document.getElementById('postTags').value    = (post.tags || []).join(', ');
+  document.getElementById('postEmoji').value   = post.coverEmoji || '';
+  document.getElementById('postCover').value   = post.cover || '';
+  document.getElementById('postExcerpt').value = post.excerpt || '';
+  document.getElementById('postContent').value = post.content || '';
+  updatePreview();
+  document.getElementById('postEditor').style.display = 'block';
+  document.getElementById('postEditor').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelEdit() {
+  document.getElementById('postEditor').style.display = 'none';
+  editingPostId = null;
+}
+
+function savePost() {
+  const title   = document.getElementById('postTitle').value.trim();
+  const content = document.getElementById('postContent').value.trim();
+  if (!title || !content) { showToast('Title and content are required', 'error'); return; }
+
+  const post = {
+    id:          editingPostId || String(Date.now()),
+    title,
+    slug:        title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, ''),
+    date:        document.getElementById('postDate').value || new Date().toISOString().split('T')[0],
+    tags:        document.getElementById('postTags').value.split(',').map(t => t.trim()).filter(Boolean),
+    coverEmoji:  document.getElementById('postEmoji').value.trim() || '📖',
+    cover:       document.getElementById('postCover').value.trim(),
+    excerpt:     document.getElementById('postExcerpt').value.trim() || title,
+    content,
+    readTime:    Math.max(1, Math.round(content.split(/\s+/).length / 200))
+  };
+
+  if (editingPostId) {
+    const idx = postsData.posts.findIndex(p => p.id === editingPostId);
+    postsData.posts[idx] = post;
+  } else {
+    postsData.posts.unshift(post);
+  }
+
+  saveData('data/blogs.json', postsData);
+  renderAdminPosts();
+  cancelEdit();
+  showToast('Post saved! Export JSON to publish.');
+}
+
+function deletePost(id) {
+  if (!confirm('Delete this post?')) return;
+  postsData.posts = postsData.posts.filter(p => p.id !== id);
+  saveData('data/blogs.json', postsData);
+  renderAdminPosts();
+  showToast('Post deleted.');
+}
+
+function updatePreview() {
+  const md  = document.getElementById('postContent').value;
+  const pre = document.getElementById('postPreview');
+  if (typeof marked !== 'undefined') pre.innerHTML = marked.parse(md);
+}
+
+function insertMd(before, after) {
+  const ta = document.getElementById('postContent');
+  const s  = ta.selectionStart, e = ta.selectionEnd;
+  const selected = ta.value.substring(s, e);
+  const newText  = ta.value.substring(0, s) + before + selected + after + ta.value.substring(e);
+  ta.value = newText;
+  ta.selectionStart = s + before.length;
+  ta.selectionEnd   = s + before.length + selected.length;
+  ta.focus();
+  updatePreview();
+}
+
+/* ── Gallery ────────────────────────────────────────────────── */
+function toggleGalleryForm(show) {
+  document.getElementById('galleryForm').style.display = show ? 'block' : 'none';
+}
+
+function addGalleryItem() {
+  const title = document.getElementById('gTitle').value.trim();
+  if (!title) { showToast('Title is required', 'error'); return; }
+  const item = {
+    id:      String(Date.now()),
+    title,
+    type:    document.getElementById('gType').value,
+    emoji:   document.getElementById('gEmoji').value.trim() || '🖼',
+    src:     document.getElementById('gSrc').value.trim(),
+    tags:    document.getElementById('gTags').value.split(',').map(t => t.trim()).filter(Boolean),
+    caption: document.getElementById('gCaption').value.trim(),
+    date:    new Date().toISOString().split('T')[0]
+  };
+  galleryData.items.unshift(item);
+  saveData('data/gallery.json', galleryData);
+  renderAdminGallery();
+  toggleGalleryForm(false);
+  ['gTitle','gType','gEmoji','gSrc','gTags','gCaption'].forEach(id => { const el = document.getElementById(id); if (el) el.value = el.tagName === 'SELECT' ? el.options[0].value : ''; });
+  showToast('Gallery item added! Export JSON to publish.');
+}
+
+function renderAdminGallery() {
+  const el = document.getElementById('adminGalleryList');
+  if (!galleryData.items.length) { el.innerHTML = '<div style="color:var(--t4);font-size:.85rem;padding:.5rem 0">No items yet.</div>'; return; }
+  el.innerHTML = galleryData.items.map(i => `
+    <div class="admin-post-item">
+      <span style="font-size:1.3rem">${i.emoji || '🖼'}</span>
+      <span class="admin-post-title">${i.title} <span style="color:var(--t4);font-size:.75rem">[${i.type}]</span></span>
+      <span class="admin-post-date">${fmtDate(i.date)}</span>
+      <div class="admin-post-actions">
+        <button class="admin-action-btn danger" onclick="deleteGalleryItem('${i.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function deleteGalleryItem(id) {
+  if (!confirm('Delete this item?')) return;
+  galleryData.items = galleryData.items.filter(i => i.id !== id);
+  saveData('data/gallery.json', galleryData);
+  renderAdminGallery();
+  showToast('Item deleted.');
+}
+
+/* ── Music ──────────────────────────────────────────────────── */
+function toggleMusicForm(show) {
+  document.getElementById('musicForm').style.display = show ? 'block' : 'none';
+}
+
+function addTrack() {
+  const title  = document.getElementById('mTitle').value.trim();
+  const artist = document.getElementById('mArtist').value.trim();
+  if (!title || !artist) { showToast('Title and artist are required', 'error'); return; }
+  const streaming = {};
+  const sp = document.getElementById('mSpotify').value.trim();
+  const yt = document.getElementById('mYoutube').value.trim();
+  if (sp) streaming.spotify = sp;
+  if (yt) streaming.youtube = yt;
+
+  const track = {
+    id:      String(Date.now()),
+    title,
+    artist,
+    album:   document.getElementById('mAlbum').value.trim(),
+    year:    parseInt(document.getElementById('mYear').value) || null,
+    emoji:   document.getElementById('mEmoji').value.trim() || '🎵',
+    tags:    document.getElementById('mTags').value.split(',').map(t => t.trim()).filter(Boolean),
+    note:    document.getElementById('mNote').value.trim(),
+    cover:   '',
+    streaming
+  };
+  musicData.tracks.unshift(track);
+  saveData('data/music.json', musicData);
+  renderAdminMusic();
+  toggleMusicForm(false);
+  ['mTitle','mArtist','mAlbum','mYear','mEmoji','mTags','mSpotify','mYoutube','mNote'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  showToast('Track added! Export JSON to publish.');
+}
+
+function renderAdminMusic() {
+  const el = document.getElementById('adminMusicList');
+  if (!musicData.tracks.length) { el.innerHTML = '<div style="color:var(--t4);font-size:.85rem;padding:.5rem 0">No tracks yet.</div>'; return; }
+  el.innerHTML = musicData.tracks.map(t => `
+    <div class="admin-post-item">
+      <span style="font-size:1.2rem">${t.emoji || '🎵'}</span>
+      <span class="admin-post-title">${t.title} — ${t.artist}</span>
+      <span class="admin-post-date">${t.year || ''}</span>
+      <div class="admin-post-actions">
+        <button class="admin-action-btn danger" onclick="deleteTrack('${t.id}')">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function deleteTrack(id) {
+  if (!confirm('Delete this track?')) return;
+  musicData.tracks = musicData.tracks.filter(t => t.id !== id);
+  saveData('data/music.json', musicData);
+  renderAdminMusic();
+  showToast('Track deleted.');
+}
+
+/* ── Thoughts ───────────────────────────────────────────────── */
+function renderAdminThoughts() {
+  document.getElementById('thoughtsInput').value = (configData.thoughts || []).join('\n');
+}
+
+function saveThoughts() {
+  const lines = document.getElementById('thoughtsInput').value.split('\n').map(l => l.trim()).filter(Boolean);
+  configData.thoughts = lines;
+  saveData('data/config.json', configData);
+  showToast('Thoughts saved! Export config.json to publish.');
+}
+
+/* ── Export (download JSON) ─────────────────────────────────── */
+function downloadJSON(filename, data) {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function exportBlogs()   { downloadJSON('blogs.json',   postsData); }
+function exportGallery() { downloadJSON('gallery.json', galleryData); }
+function exportMusic()   { downloadJSON('music.json',   musicData); }
+function exportConfig()  { downloadJSON('config.json',  configData); }
+
+/* ── allow pressing Enter on password field ─────────────────── */
+document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') checkPw(); });
+</script>
+</body>
+</html>

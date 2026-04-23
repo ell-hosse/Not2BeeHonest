@@ -1,0 +1,94 @@
+{
+  "tracks": [
+    {
+      "id": "001",
+      "title": "Redbone",
+      "artist": "Childish Gambino",
+      "album": "Awaken, My Love!",
+      "year": 2016,
+      "cover": "",
+      "emoji": "🔴",
+      "streaming": {
+        "spotify": "https://open.spotify.com/track/0wXuerDYiBnERgIpbb3JBR",
+        "youtube": "https://www.youtube.com/watch?v=Kp7eSUU9oy8"
+      },
+      "note": "That late-night, ceiling-staring, everything-is-vast song. Donald Glover discovered something ancient here.",
+      "tags": ["funk", "soul", "R&B"]
+    },
+    {
+      "id": "002",
+      "title": "Motion Picture Soundtrack",
+      "artist": "Radiohead",
+      "album": "Kid A",
+      "year": 2000,
+      "cover": "",
+      "emoji": "🎹",
+      "streaming": {
+        "spotify": "https://open.spotify.com/track/6T4rFpK3V7YlDLCFmgBsqO",
+        "youtube": "https://www.youtube.com/watch?v=4FwfDEdnBNA"
+      },
+      "note": "The kind of song you listen to when you need permission to feel something enormous and unnamed.",
+      "tags": ["art rock", "ambient", "electronic"]
+    },
+    {
+      "id": "003",
+      "title": "Blue Ridge Mountains",
+      "artist": "Fleet Foxes",
+      "album": "Fleet Foxes",
+      "year": 2008,
+      "cover": "",
+      "emoji": "🏔️",
+      "streaming": {
+        "spotify": "https://open.spotify.com/track/4bIONH0YQaIBBbCCMTsKhH",
+        "youtube": "https://www.youtube.com/watch?v=PkC0im0-Eos"
+      },
+      "note": "Sounds like morning fog lifting off a valley. Every time.",
+      "tags": ["folk", "indie", "harmonies"]
+    },
+    {
+      "id": "004",
+      "title": "Holocene",
+      "artist": "Bon Iver",
+      "album": "Bon Iver, Bon Iver",
+      "year": 2011,
+      "cover": "",
+      "emoji": "❄️",
+      "streaming": {
+        "spotify": "https://open.spotify.com/track/0pqQMb4RsExoLGAKMiqPtB",
+        "youtube": "https://www.youtube.com/watch?v=TWcyIpul8OE"
+      },
+      "note": "Made me feel like a small mammal watching a glacier move. In the best possible way.",
+      "tags": ["indie folk", "ambient"]
+    },
+    {
+      "id": "005",
+      "title": "Comptine d'un autre été",
+      "artist": "Yann Tiersen",
+      "album": "Amélie (Original Soundtrack)",
+      "year": 2001,
+      "cover": "",
+      "emoji": "🎠",
+      "streaming": {
+        "spotify": "https://open.spotify.com/track/1u8c2t2Cy7UBoG4ArRcF5g",
+        "youtube": "https://www.youtube.com/watch?v=H3GFK8MkbqQ"
+      },
+      "note": "The song that sounds like a rainy Tuesday afternoon that turns out to be the most important day of your life.",
+      "tags": ["classical", "piano", "soundtrack"]
+    },
+    {
+      "id": "006",
+      "title": "Pyramid Song",
+      "artist": "Radiohead",
+      "album": "Amnesiac",
+      "year": 2001,
+      "cover": "",
+      "emoji": "🌊",
+      "streaming": {
+        "spotify": "https://open.spotify.com/track/4YiR6F8Lc7pRmTPEMpBpUw",
+        "youtube": "https://www.youtube.com/watch?v=3M_Gg1xAHtY"
+      },
+      "note": "Thom Yorke composed a song about being okay with the end. The time signature shifts every bar. I think that's a metaphor.",
+      "tags": ["art rock", "jazz influenced"]
+    }
+  ]
+}

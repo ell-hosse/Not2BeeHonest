@@ -1,0 +1,33 @@
+{
+  "site": {
+    "title": "Not2BeeHonest",
+    "author": "Elaheh",
+    "tagline": "Where Nature Meets Code",
+    "description": "A mind wandering through forests, algorithms, and the space between"
+  },
+  "admin": {
+    "passwordHash": "0905fa5e8ca65374e5ea84b90d1e6a5a185e1f0518ff3e96bca10f069c29257f"
+  },
+  "thoughts": [
+    "What if trees are the original internet?",
+    "Entropy is just creativity without intention.",
+    "Every fractal is a story that repeats itself at every scale.",
+    "The most interesting bugs are the ones that are technically features.",
+    "Nature solved distributed computing before we invented computers.",
+    "A good question is worth more than a hundred confident answers.",
+    "Mushrooms might be more emotionally intelligent than humans. Just saying.",
+    "Complexity emerges from simplicity when you give it enough time.",
+    "The universe has been running a simulation. We're the render artifacts.",
+    "Sometimes the forest doesn't answer back because you asked the wrong question.",
+    "Dark matter: the original undefined variable.",
+    "Sleep is just offline mode with better dreams.",
+    "If photons travel at the speed of light, do they experience time? If not, are they immortal?",
+    "The Fibonacci sequence appears in nature because spirals are a very efficient way to grow.",
+    "Bees build hexagonal honeycombs because hexagons are the optimal shape. Bees discovered mathematics.",
+    "The coolest thing about science is that it's okay to be wrong — it's even expected.",
+    "Neural networks are just math that learned to be confused about the same things humans are.",
+    "The most human thing about AI is how confidently it gets things wrong.",
+    "There is no bug-free code. There is only code whose bugs haven't been triggered yet.",
+    "Rocks are very slow computers. They just don't have an interesting program running."
+  ]
+}

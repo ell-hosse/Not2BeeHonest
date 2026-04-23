@@ -1,0 +1,64 @@
+{
+  "items": [
+    {
+      "id": "001",
+      "type": "photo",
+      "title": "Forest Floor After Rain",
+      "src": "",
+      "emoji": "🌿",
+      "tags": ["nature", "forest"],
+      "date": "2026-04-18",
+      "caption": "That moment when everything smells like petrichor and potential."
+    },
+    {
+      "id": "002",
+      "type": "meme",
+      "title": "The Codebase at 3am",
+      "src": "",
+      "emoji": "🦉",
+      "tags": ["meme", "coding"],
+      "date": "2026-04-15",
+      "caption": "Me: I'll just fix this one small thing.  Also me, 4 hours later:"
+    },
+    {
+      "id": "003",
+      "type": "ai-art",
+      "title": "Neural Forest",
+      "src": "",
+      "emoji": "🧠",
+      "tags": ["AI art", "nature", "AI"],
+      "date": "2026-04-10",
+      "caption": "Generated prompt: bioluminescent forest where the trees are neural networks, macro photography, deep green"
+    },
+    {
+      "id": "004",
+      "type": "photo",
+      "title": "My Window at Golden Hour",
+      "src": "",
+      "emoji": "🌅",
+      "tags": ["personal", "light"],
+      "date": "2026-04-08",
+      "caption": "Some moments insist on being noticed."
+    },
+    {
+      "id": "005",
+      "type": "meme",
+      "title": "Machine Learning Explained",
+      "src": "",
+      "emoji": "🤖",
+      "tags": ["meme", "AI"],
+      "date": "2026-04-03",
+      "caption": "The model: *confidently wrong* // Me: Why did I trust you"
+    },
+    {
+      "id": "006",
+      "type": "ai-art",
+      "title": "Fibonacci Spiral in Amber",
+      "src": "",
+      "emoji": "🐚",
+      "tags": ["AI art", "math", "science"],
+      "date": "2026-03-28",
+      "caption": "Nature's favorite number, frozen mid-spiral."
+    }
+  ]
+}

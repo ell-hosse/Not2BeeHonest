@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Not2BeeHonest — Where Nature Meets Code</title>
+  <meta name="description" content="A mind wandering through forests, algorithms, and the space between.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐝</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<!-- Navigation -->
+<nav class="nav-glass">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo">
+      <span class="nav-logo-icon">🐝</span>
+      <span>Not2BeeHonest</span>
+    </a>
+    <div class="nav-links">
+      <a href="blog.html"    class="nav-link">Blog</a>
+      <a href="gallery.html" class="nav-link">Gallery</a>
+      <a href="music.html"   class="nav-link">Music</a>
+      <a href="admin.html"   class="nav-link nav-write">✦ Write</a>
+    </div>
+    <button class="nav-menu-btn" id="menuBtn">☰</button>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="blog.html">Blog</a>
+  <a href="gallery.html">Gallery</a>
+  <a href="music.html">Music</a>
+  <a href="admin.html">✦ Write</a>
+</div>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-content">
+    <div class="hero-badge">// entropy favors the curious</div>
+    <h1 class="hero-title">
+      <span class="glitch" data-text="Not2BeeHonest">Not2BeeHonest</span>
+    </h1>
+    <p class="hero-subtitle">
+      A mind wandering through
+      <span class="hl-g">forests</span>,
+      <span class="hl-p">algorithms</span>,
+      and the <span class="hl-c">space between</span>
+    </p>
+    <div class="hero-cta">
+      <a href="blog.html"    class="btn btn-primary">Explore Thoughts</a>
+      <a href="#home-content" class="btn btn-ghost">Discover More ↓</a>
+    </div>
+  </div>
+  <div class="scroll-indicator">
+    <span>scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- Random Thought -->
+<section class="thought-section" id="home-content">
+  <div class="container">
+    <div class="thought-card reveal">
+      <div class="thought-label">// random.thought()</div>
+      <p class="thought-text" id="thoughtText">Loading...</p>
+      <button class="thought-refresh" onclick="nextThought()">↻ another thought</button>
+    </div>
+  </div>
+</section>
+
+<!-- Main Sections -->
+<section class="home-sections">
+  <div class="container">
+    <div class="home-sections-grid">
+
+      <!-- Blog -->
+      <div class="home-section-card reveal">
+        <div class="home-sec-header">
+          <div class="home-sec-title">✍ Latest Thoughts</div>
+          <a href="blog.html" class="see-all">See All →</a>
+        </div>
+        <div id="homePosts">
+          <div style="color:var(--t4);font-size:.85rem;padding:.5rem 0;">Loading posts…</div>
+        </div>
+      </div>
+
+      <!-- Music -->
+      <div class="home-section-card reveal">
+        <div class="home-sec-header">
+          <div class="home-sec-title">🎵 Current Soundtrack</div>
+          <a href="music.html" class="see-all">See All →</a>
+        </div>
+        <div id="homeMusic">
+          <div style="color:var(--t4);font-size:.85rem;padding:.5rem 0;">Loading tracks…</div>
+        </div>
+      </div>
+
+      <!-- Gallery -->
+      <div class="home-section-card wide reveal">
+        <div class="home-sec-header">
+          <div class="home-sec-title">🖼 Visual Log</div>
+          <a href="gallery.html" class="see-all">See All →</a>
+        </div>
+        <div id="homeGallery" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.75rem;">
+          <div style="color:var(--t4);font-size:.85rem;padding:.5rem 0;">Loading gallery…</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand"><span>🐝</span><span>Not2BeeHonest</span></div>
+      <p class="footer-quote">"In the forest of code, every bug is a <span>feature</span> waiting to be understood."</p>
+      <div class="footer-bottom">
+        <span>Built with curiosity &amp; caffeine</span>
+        <span>∿ Open Source on GitHub</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<button class="scroll-top" aria-label="Scroll to top">↑</button>
+
+<script src="js/particles.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // Random thought
+  let thoughts = [], thoughtIdx = 0;
+
+  async function initThoughts() {
+    const cfg = await loadData('data/config.json');
+    if (cfg && cfg.thoughts) {
+      thoughts = [...cfg.thoughts].sort(() => Math.random() - 0.5);
+      showThought();
+    }
+  }
+
+  function showThought() {
+    const el = document.getElementById('thoughtText');
+    if (!thoughts.length || !el) return;
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.textContent = '"' + thoughts[thoughtIdx % thoughts.length] + '"';
+      el.style.opacity = '1';
+    }, 200);
+  }
+
+  function nextThought() {
+    thoughtIdx++;
+    showThought();
+  }
+  window.nextThought = nextThought;
+
+  // Home blog preview
+  async function initHomePosts() {
+    const data = await loadData('data/blogs.json');
+    const el = document.getElementById('homePosts');
+    if (!data || !data.posts.length) { el.innerHTML = '<div class="empty-state" style="padding:1rem 0"><span style="font-size:1.5rem">📝</span><p style="font-size:.85rem;color:var(--t4)">No posts yet</p></div>'; return; }
+    el.innerHTML = data.posts.slice(0, 4).map(p => `
+      <a href="post.html?id=${p.id}" class="post-list-item" style="display:flex;gap:.75rem;padding:.65rem 0;border-bottom:1px solid var(--border);text-decoration:none">
+        <span class="post-list-date" style="font-family:var(--font-mono);font-size:.72rem;color:var(--a1);white-space:nowrap;padding-top:.1rem">${fmtDate(p.date)}</span>
+        <span class="post-list-title" style="font-size:.9rem;font-weight:600;color:var(--t1)">${p.title}</span>
+      </a>`).join('');
+  }
+
+  // Home music preview
+  async function initHomeMusic() {
+    const data = await loadData('data/music.json');
+    const el = document.getElementById('homeMusic');
+    if (!data || !data.tracks.length) { el.innerHTML = '<div style="padding:1rem 0;color:var(--t4);font-size:.85rem">No tracks yet</div>'; return; }
+    el.innerHTML = data.tracks.slice(0, 4).map(t => `
+      <a href="music.html" style="display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid var(--border);text-decoration:none">
+        <div style="width:38px;height:38px;border-radius:8px;background:var(--bg-2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:1.2rem;border:1px solid var(--border)">${t.emoji || '🎵'}</div>
+        <div>
+          <div style="font-size:.875rem;font-weight:600;color:var(--t1)">${t.title}</div>
+          <div style="font-size:.78rem;color:var(--t4)">${t.artist}</div>
+        </div>
+      </a>`).join('');
+  }
+
+  // Home gallery preview
+  async function initHomeGallery() {
+    const data = await loadData('data/gallery.json');
+    const el = document.getElementById('homeGallery');
+    if (!data || !data.items.length) { el.innerHTML = '<div style="padding:1rem 0;color:var(--t4);font-size:.85rem">No items yet</div>'; return; }
+    el.innerHTML = data.items.slice(0, 6).map(item => `
+      <a href="gallery.html" style="aspect-ratio:1;border-radius:12px;background:var(--bg-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:2.5rem;text-decoration:none;transition:all .2s;overflow:hidden" title="${item.title}">
+        ${item.src ? `<img src="${item.src}" alt="${item.title}" style="width:100%;height:100%;object-fit:cover">` : item.emoji || '🖼'}
+      </a>`).join('');
+  }
+
+  initThoughts();
+  initHomePosts();
+  initHomeMusic();
+  initHomeGallery();
+</script>
+</body>
+</html>

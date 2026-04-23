@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Music — Not2BeeHonest</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐝</text></svg>">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<canvas id="particles-canvas"></canvas>
+
+<nav class="nav-glass">
+  <div class="nav-container">
+    <a href="index.html" class="nav-logo"><span class="nav-logo-icon">🐝</span><span>Not2BeeHonest</span></a>
+    <div class="nav-links">
+      <a href="blog.html"    class="nav-link">Blog</a>
+      <a href="gallery.html" class="nav-link">Gallery</a>
+      <a href="music.html"   class="nav-link active">Music</a>
+      <a href="admin.html"   class="nav-link nav-write">✦ Write</a>
+    </div>
+    <button class="nav-menu-btn" id="menuBtn">☰</button>
+  </div>
+</nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="blog.html">Blog</a>
+  <a href="gallery.html">Gallery</a>
+  <a href="music.html">Music</a>
+  <a href="admin.html">✦ Write</a>
+</div>
+
+<div class="page-wrapper">
+  <div class="container">
+
+    <div class="page-header reveal">
+      <div class="section-label">// playlist.current</div>
+      <h1 class="section-title">Music</h1>
+      <p class="section-desc">Songs I've been living inside lately — with lyrics auto-loaded so you can follow along.</p>
+      <div class="divider"></div>
+    </div>
+
+    <!-- Tag Filter -->
+    <div class="filter-bar reveal" style="margin-bottom:2rem">
+      <div class="tag-filters" id="musicTagFilters"></div>
+    </div>
+
+    <!-- Track List -->
+    <div class="music-layout" id="trackList">
+      <div style="color:var(--t4);text-align:center;padding:3rem">Loading tracks…</div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand"><span>🐝</span><span>Not2BeeHonest</span></div>
+      <div class="footer-bottom"><span>Built with curiosity &amp; caffeine</span></div>
+    </div>
+  </div>
+</footer>
+
+<button class="scroll-top" aria-label="Scroll to top">↑</button>
+
+<script src="js/particles.js"></script>
+<script src="js/app.js"></script>
+<script>
+  let allTracks = [];
+  let activeTag  = 'all';
+  const lyricsCache = {};
+
+  async function init() {
+    const data = await loadData('data/music.json');
+    if (!data || !data.tracks) {
+      document.getElementById('trackList').innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎵</div><p class="empty-state-text">No tracks yet. <a href="admin.html">Add some!</a></p></div>';
+      return;
+    }
+    allTracks = data.tracks;
+    buildTagFilters();
+    renderTracks(allTracks);
+  }
+
+  function buildTagFilters() {
+    const tags = ['all', ...new Set(allTracks.flatMap(t => t.tags || []))];
+    const el = document.getElementById('musicTagFilters');
+    el.innerHTML = tags.map(t => `<button class="tag ${t==='all'?'active':''}" onclick="setTag('${t}')">${t}</button>`).join('');
+  }
+
+  function setTag(tag) {
+    activeTag = tag;
+    document.querySelectorAll('#musicTagFilters .tag').forEach(b => b.classList.toggle('active', b.textContent === tag));
+    const filtered = tag === 'all' ? allTracks : allTracks.filter(t => (t.tags||[]).includes(tag));
+    renderTracks(filtered);
+  }
+
+  function renderTracks(tracks) {
+    const el = document.getElementById('trackList');
+    if (!tracks.length) { el.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><p class="empty-state-text">No tracks in this category.</p></div>'; return; }
+    el.innerHTML = tracks.map((t, i) => buildTrackCard(t, i)).join('');
+  }
+
+  function buildTrackCard(t, i) {
+    const streamLinks = Object.entries(t.streaming || {}).map(([platform, url]) => {
+      const icons = { spotify: '🎧', youtube: '▶️', soundcloud: '☁️', bandcamp: '🏕️' };
+      return `<a href="${url}" target="_blank" rel="noopener" class="track-stream-btn">${icons[platform] || '🔗'} ${platform}</a>`;
+    }).join('');
+
+    return `
+      <div class="track-card reveal" id="track-${t.id}" style="animation-delay:${i * 0.06}s">
+        <div class="track-header" onclick="toggleTrack('${t.id}')">
+          <div class="track-art">
+            ${t.cover ? `<img src="${t.cover}" alt="${t.title}">` : `<div class="track-art-placeholder">${t.emoji || '🎵'}</div>`}
+          </div>
+          <div class="track-info">
+            <div class="track-title">${t.title}</div>
+            <div class="track-artist">${t.artist}</div>
+            <div class="track-year">${t.album ? t.album + ' · ' : ''}${t.year || ''}</div>
+          </div>
+          <div class="track-actions">
+            <div class="track-tags" style="display:flex;flex-wrap:wrap;gap:.3rem;max-width:120px">
+              ${(t.tags||[]).map(tag => `<span class="tag" style="font-size:.65rem">${tag}</span>`).join('')}
+            </div>
+            <button class="track-expand-btn" aria-label="Expand">▾</button>
+          </div>
+        </div>
+        <div class="track-body" id="body-${t.id}">
+          <div class="track-body-inner">
+            ${t.note ? `<div class="track-note">"${t.note}"</div>` : ''}
+            ${streamLinks ? `<div class="track-streaming">${streamLinks}</div>` : ''}
+            <div class="track-lyrics-section">
+              <button class="track-lyrics-btn" onclick="loadLyrics('${t.id}', '${esc(t.artist)}', '${esc(t.title)}')">
+                ♩ Load Lyrics
+              </button>
+              <div class="lyrics-container" id="lyrics-${t.id}">
+                <div class="lyrics-loading" id="lyrics-loading-${t.id}">Fetching lyrics…</div>
+                <pre class="lyrics-text" id="lyrics-text-${t.id}" style="display:none"></pre>
+                <div class="lyrics-source" id="lyrics-source-${t.id}"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function esc(s) { return (s||'').replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+
+  function toggleTrack(id) {
+    const card = document.getElementById('track-' + id);
+    const wasOpen = card.classList.contains('expanded');
+    // collapse all
+    document.querySelectorAll('.track-card.expanded').forEach(c => c.classList.remove('expanded'));
+    if (!wasOpen) card.classList.add('expanded');
+  }
+
+  async function loadLyrics(trackId, artist, title) {
+    const btn  = document.querySelector(`#track-${trackId} .track-lyrics-btn`);
+    const box  = document.getElementById('lyrics-' + trackId);
+    const load = document.getElementById('lyrics-loading-' + trackId);
+    const pre  = document.getElementById('lyrics-text-' + trackId);
+    const src  = document.getElementById('lyrics-source-' + trackId);
+
+    // Toggle if already loaded
+    if (box.classList.contains('visible') && pre.style.display !== 'none') {
+      box.classList.remove('visible');
+      btn.textContent = '♩ Load Lyrics';
+      return;
+    }
+
+    box.classList.add('visible');
+    btn.textContent = '♩ Hide Lyrics';
+
+    if (lyricsCache[trackId]) {
+      showLyrics(pre, load, src, lyricsCache[trackId], artist, title);
+      return;
+    }
+
+    load.textContent = 'Fetching lyrics…';
+    load.style.display = 'block';
+    pre.style.display = 'none';
+
+    try {
+      const res = await fetch(`https://api.lyrics.ovh/v1/${encodeURIComponent(artist)}/${encodeURIComponent(title)}`);
+      if (!res.ok) throw new Error('not found');
+      const json = await res.json();
+      if (!json.lyrics) throw new Error('empty');
+      lyricsCache[trackId] = json.lyrics;
+      showLyrics(pre, load, src, json.lyrics, artist, title);
+    } catch {
+      load.style.display = 'none';
+      pre.style.display  = 'block';
+      pre.textContent    = '— Lyrics not found automatically. —\n\nTry searching on Genius ↗';
+      src.innerHTML = `<a href="https://genius.com/search?q=${encodeURIComponent(artist + ' ' + title)}" target="_blank" rel="noopener" style="color:var(--a1)">Search on Genius ↗</a>`;
+    }
+  }
+
+  function showLyrics(pre, load, src, lyrics, artist, title) {
+    load.style.display = 'none';
+    pre.style.display  = 'block';
+    pre.textContent    = lyrics;
+    src.innerHTML = `Lyrics via <a href="https://lyrics.ovh" target="_blank" rel="noopener" style="color:var(--a1)">lyrics.ovh</a>`;
+  }
+
+  init();
+</script>
+</body>
+</html>
