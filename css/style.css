@@ -1361,6 +1361,13 @@ input, textarea, select { font-family: var(--font-body); }
   margin-bottom: 1rem;
 }
 
+/* Drop Zone */
+.drop-zone-active {
+  border-color: var(--a1) !important;
+  background: rgba(0, 255, 136, 0.04) !important;
+  box-shadow: var(--glow-g);
+}
+
 /* Export section */
 .export-section {
   margin-top: 3rem;

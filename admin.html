@@ -162,6 +162,35 @@
       <!-- Add Form -->
       <div id="galleryForm" style="display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:1.5rem;margin-bottom:1.5rem">
         <div class="admin-section-title" style="margin-bottom:1rem">Add Gallery Item</div>
+
+        <!-- Drop Zone -->
+        <div id="dropZone"
+          style="border:2px dashed rgba(0,255,136,0.25);border-radius:var(--r-lg);padding:2.5rem;text-align:center;margin-bottom:1.25rem;cursor:pointer;transition:all .2s;position:relative"
+          onclick="document.getElementById('filePickerInput').click()"
+          ondragover="handleDragOver(event)"
+          ondragleave="handleDragLeave(event)"
+          ondrop="handleDrop(event)">
+          <input type="file" id="filePickerInput" accept="image/*" style="display:none" onchange="handleFileSelect(this.files)">
+          <div id="dropZoneContent">
+            <div style="font-size:2.5rem;margin-bottom:.5rem">🖼</div>
+            <div style="color:var(--t2);font-size:.9rem;font-weight:600">Drag &amp; drop an image here</div>
+            <div style="color:var(--t4);font-size:.78rem;margin-top:.3rem">or click to browse · JPG, PNG, GIF, WebP</div>
+          </div>
+          <!-- Preview (hidden until file chosen) -->
+          <div id="dropPreview" style="display:none;flex-direction:column;align-items:center;gap:.75rem">
+            <img id="dropPreviewImg" style="max-height:200px;max-width:100%;border-radius:var(--r-md);border:1px solid var(--border)" src="" alt="">
+            <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;justify-content:center">
+              <span id="dropFileName" style="font-family:var(--font-mono);font-size:.78rem;color:var(--a1)"></span>
+              <button class="admin-action-btn" style="pointer-events:auto" onclick="event.stopPropagation();clearFile()">✕ Remove</button>
+            </div>
+            <!-- Save to disk button (File System Access API) -->
+            <button id="saveToDiskBtn" class="btn btn-primary btn-sm" style="pointer-events:auto" onclick="event.stopPropagation();saveFileToDisk()">
+              💾 Save to assets/gallery/
+            </button>
+            <div id="saveStatus" style="font-family:var(--font-mono);font-size:.75rem;color:var(--t4)"></div>
+          </div>
+        </div>
+
         <div class="admin-form-grid">
           <div class="form-group" style="margin:0">
             <label class="form-label">Title *</label>
@@ -176,12 +205,12 @@
             </select>
           </div>
           <div class="form-group" style="margin:0">
-            <label class="form-label">Emoji (placeholder)</label>
+            <label class="form-label">Emoji (fallback)</label>
             <input type="text" class="form-input" id="gEmoji" placeholder="🌿">
           </div>
           <div class="form-group" style="margin:0">
-            <label class="form-label">Image URL (optional)</label>
-            <input type="text" class="form-input" id="gSrc" placeholder="https://... or assets/gallery/...">
+            <label class="form-label">Image path / URL</label>
+            <input type="text" class="form-input" id="gSrc" placeholder="auto-filled after saving, or paste a URL">
           </div>
           <div class="form-group" style="margin:0">
             <label class="form-label">Tags (comma-separated)</label>
@@ -459,9 +488,108 @@ function insertMd(before, after) {
   updatePreview();
 }
 
-/* ── Gallery ────────────────────────────────────────────────── */
+/* ── Gallery + File Upload ──────────────────────────────────── */
+let pendingFile = null;   // the File object waiting to be saved
+let pendingSavedPath = ''; // path after saving via FS API
+
 function toggleGalleryForm(show) {
   document.getElementById('galleryForm').style.display = show ? 'block' : 'none';
+  if (!show) clearFile();
+}
+
+/* Drag-and-drop handlers */
+function handleDragOver(e) {
+  e.preventDefault();
+  const dz = document.getElementById('dropZone');
+  dz.style.borderColor = 'var(--a1)';
+  dz.style.background  = 'rgba(0,255,136,0.04)';
+}
+function handleDragLeave(e) {
+  const dz = document.getElementById('dropZone');
+  dz.style.borderColor = 'rgba(0,255,136,0.25)';
+  dz.style.background  = '';
+}
+function handleDrop(e) {
+  e.preventDefault();
+  handleDragLeave(e);
+  const files = e.dataTransfer.files;
+  if (files.length) handleFileSelect(files);
+}
+
+function handleFileSelect(files) {
+  const file = files[0];
+  if (!file || !file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return; }
+  pendingFile      = file;
+  pendingSavedPath = '';
+
+  // Show preview
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('dropPreviewImg').src = ev.target.result;
+    document.getElementById('dropFileName').textContent = file.name;
+    document.getElementById('dropZoneContent').style.display = 'none';
+    document.getElementById('dropPreview').style.display     = 'flex';
+    document.getElementById('saveStatus').textContent = '';
+    // Auto-fill title if empty
+    if (!document.getElementById('gTitle').value) {
+      document.getElementById('gTitle').value = file.name.replace(/\.[^.]+$/, '').replace(/[-_]/g, ' ');
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearFile() {
+  pendingFile = null;
+  pendingSavedPath = '';
+  document.getElementById('dropPreviewImg').src = '';
+  document.getElementById('dropZoneContent').style.display = 'block';
+  document.getElementById('dropPreview').style.display     = 'none';
+  document.getElementById('dropFileName').textContent = '';
+  document.getElementById('saveStatus').textContent   = '';
+  document.getElementById('filePickerInput').value    = '';
+  document.getElementById('gSrc').value               = '';
+}
+
+async function saveFileToDisk() {
+  if (!pendingFile) return;
+  const statusEl = document.getElementById('saveStatus');
+
+  // Try File System Access API first (Chrome/Edge)
+  if ('showSaveFilePicker' in window) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: pendingFile.name,
+        startIn: 'documents',
+        types: [{ description: 'Image', accept: { 'image/*': ['.jpg','.jpeg','.png','.gif','.webp'] } }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(pendingFile);
+      await writable.close();
+
+      // Best guess path relative to repo root
+      const savedName = handle.name;
+      pendingSavedPath = 'assets/gallery/' + savedName;
+      document.getElementById('gSrc').value = pendingSavedPath;
+      statusEl.innerHTML = `✓ Saved. Move the file to <code style="color:var(--a1)">assets/gallery/</code> if it landed elsewhere, then commit it.`;
+      document.getElementById('saveToDiskBtn').textContent = '✓ Saved';
+      showToast('File saved! Move to assets/gallery/ and commit.');
+      return;
+    } catch (err) {
+      if (err.name === 'AbortError') return; // user cancelled
+    }
+  }
+
+  // Fallback: trigger a browser download
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(pendingFile);
+  a.download = pendingFile.name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  pendingSavedPath = 'assets/gallery/' + pendingFile.name;
+  document.getElementById('gSrc').value = pendingSavedPath;
+  statusEl.innerHTML = `Downloaded. Move <code style="color:var(--a1)">${pendingFile.name}</code> to <code style="color:var(--a1)">assets/gallery/</code> in your repo, then commit.`;
+  document.getElementById('saveToDiskBtn').textContent = '✓ Downloaded';
+  showToast('File downloaded — move it to assets/gallery/');
 }
 
 function addGalleryItem() {
@@ -481,8 +609,11 @@ function addGalleryItem() {
   saveData('data/gallery.json', galleryData);
   renderAdminGallery();
   toggleGalleryForm(false);
-  ['gTitle','gType','gEmoji','gSrc','gTags','gCaption'].forEach(id => { const el = document.getElementById(id); if (el) el.value = el.tagName === 'SELECT' ? el.options[0].value : ''; });
-  showToast('Gallery item added! Export JSON to publish.');
+  ['gTitle','gType','gEmoji','gSrc','gTags','gCaption'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = el.tagName === 'SELECT' ? el.options[0].value : '';
+  });
+  showToast('Gallery item added! Export JSON + commit the image file.');
 }
 
 function renderAdminGallery() {
@@ -490,7 +621,9 @@ function renderAdminGallery() {
   if (!galleryData.items.length) { el.innerHTML = '<div style="color:var(--t4);font-size:.85rem;padding:.5rem 0">No items yet.</div>'; return; }
   el.innerHTML = galleryData.items.map(i => `
     <div class="admin-post-item">
-      <span style="font-size:1.3rem">${i.emoji || '🖼'}</span>
+      ${i.src
+        ? `<img src="${i.src}" style="width:38px;height:38px;object-fit:cover;border-radius:6px;border:1px solid var(--border);flex-shrink:0" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'${i.emoji||'🖼'}',style:'font-size:1.3rem'}))">`
+        : `<span style="font-size:1.3rem">${i.emoji || '🖼'}</span>`}
       <span class="admin-post-title">${i.title} <span style="color:var(--t4);font-size:.75rem">[${i.type}]</span></span>
       <span class="admin-post-date">${fmtDate(i.date)}</span>
       <div class="admin-post-actions">
