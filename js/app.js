@@ -60,14 +60,17 @@ window.showToast = showToast;
 // ── Data helpers (fetch JSON with localStorage cache fallback) ──
 async function loadData(file) {
   const key = 'n2bh_' + file.replace(/\//g, '_');
+  // localStorage (admin edits) takes priority over the committed file
+  const cached = localStorage.getItem(key);
+  if (cached) { try { return JSON.parse(cached); } catch {} }
+  // No local edits — fetch the published file and seed localStorage
   try {
     const res = await fetch(file + '?v=' + Date.now());
     if (!res.ok) throw new Error('fetch failed');
     const data = await res.json();
+    localStorage.setItem(key, JSON.stringify(data)); // seed so future reads are instant
     return data;
   } catch {
-    const cached = localStorage.getItem(key);
-    if (cached) { try { return JSON.parse(cached); } catch {} }
     return null;
   }
 }

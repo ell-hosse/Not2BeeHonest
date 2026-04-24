@@ -16,7 +16,9 @@
 <div class="admin-gate" id="adminGate">
   <div class="admin-login-card">
     <div class="admin-login-icon">🔐</div>
-    <h1 class="admin-login-title">Admin Panel</h1>
+    <h1 class="admin-login-title">Admin Pane
+
+      l</h1>
     <p class="admin-login-sub">Enter your password to access the writing panel.</p>
     <div class="form-group">
       <label class="form-label">Password</label>
@@ -49,9 +51,12 @@
   </div>
 
   <div class="container">
-    <div class="admin-header">
-      <div class="admin-title">✦ Writing Panel</div>
-      <p style="font-size:.85rem;color:var(--t4)">Create or edit content, then export the JSON files and commit them to your repo.</p>
+    <div class="admin-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem">
+      <div>
+        <div class="admin-title">✦ Writing Panel</div>
+        <p style="font-size:.85rem;color:var(--t4)">Create or edit content, then export the JSON files and commit them to your repo.</p>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="syncFromGitHub()" title="Clears local edits and reloads from committed JSON files">↺ Sync from GitHub</button>
     </div>
 
     <!-- Tabs -->
@@ -722,6 +727,16 @@ function exportBlogs()   { downloadJSON('blogs.json',   postsData); }
 function exportGallery() { downloadJSON('gallery.json', galleryData); }
 function exportMusic()   { downloadJSON('music.json',   musicData); }
 function exportConfig()  { downloadJSON('config.json',  configData); }
+
+/* ── Sync from GitHub (clears localStorage, re-fetches files) ── */
+async function syncFromGitHub() {
+  if (!confirm('This will clear your local edits and reload data from the committed JSON files. Continue?')) return;
+  ['data/blogs.json', 'data/gallery.json', 'data/music.json', 'data/config.json'].forEach(f => {
+    localStorage.removeItem('n2bh_' + f.replace(/\//g, '_'));
+  });
+  await loadAdminData();
+  showToast('Synced from GitHub.');
+}
 
 /* ── allow pressing Enter on password field ─────────────────── */
 document.getElementById('pwInput').addEventListener('keydown', e => { if(e.key==='Enter') checkPw(); });
