@@ -19,7 +19,8 @@
     <h1 class="admin-login-title">Admin Pane
 
       l</h1>
-    <p class="admin-login-sub">Enter your password to access the writing panel.</p>
+    <ppush it now
+           class="admin-login-sub">Enter your password to access the writing panel.</ppush>
     <div class="form-group">
       <label class="form-label">Password</label>
       <input type="password" class="form-input" id="pwInput" placeholder="••••••••" onkeydown="if(event.key==='Enter')checkPw()">
@@ -93,7 +94,7 @@
           </div>
         </div>
 
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
           <div class="form-group" style="margin:0">
             <label class="form-label">Tags (comma-separated)</label>
             <input type="text" class="form-input" id="postTags" placeholder="nature, AI, science">
@@ -102,10 +103,33 @@
             <label class="form-label">Cover Emoji</label>
             <input type="text" class="form-input" id="postEmoji" placeholder="🌿">
           </div>
-          <div class="form-group" style="margin:0">
-            <label class="form-label">Cover Image URL (optional)</label>
-            <input type="text" class="form-input" id="postCover" placeholder="https://...">
+        </div>
+
+        <div class="form-group" style="margin-bottom:1rem">
+          <label class="form-label">Cover Image (optional)</label>
+          <div id="postDropZone"
+            style="border:2px dashed rgba(0,255,136,0.25);border-radius:var(--r-md);padding:1.75rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;margin-bottom:.5rem"
+            onclick="document.getElementById('postFileInput').click()"
+            ondragover="postDragOver(event)"
+            ondragleave="postDragLeave(event)"
+            ondrop="postDrop(event)">
+            <input type="file" id="postFileInput" accept="image/*" style="display:none" onchange="postFileSelect(this.files)">
+            <div id="postDropContent">
+              <div style="font-size:1.75rem;margin-bottom:.35rem">🖼</div>
+              <div style="color:var(--t2);font-size:.85rem;font-weight:600">Drop cover image here</div>
+              <div style="color:var(--t4);font-size:.75rem;margin-top:.2rem">or click to browse · JPG, PNG, WebP</div>
+            </div>
+            <div id="postDropPreview" style="display:none;flex-direction:column;align-items:center;gap:.6rem">
+              <img id="postDropImg" style="max-height:140px;max-width:100%;border-radius:var(--r-md);border:1px solid var(--border)" src="" alt="">
+              <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;justify-content:center">
+                <span id="postDropName" style="font-family:var(--font-mono);font-size:.75rem;color:var(--a1)"></span>
+                <button class="admin-action-btn" style="pointer-events:auto" onclick="event.stopPropagation();clearPostFile()">✕ Remove</button>
+                <button id="postSaveBtn" class="btn btn-primary btn-sm" style="pointer-events:auto" onclick="event.stopPropagation();savePostFile()">💾 Save to assets/images/</button>
+              </div>
+              <div id="postSaveStatus" style="font-family:var(--font-mono);font-size:.75rem;color:var(--t4)"></div>
+            </div>
           </div>
+          <input type="text" class="form-input" id="postCover" placeholder="auto-filled after saving, or paste a URL">
         </div>
 
         <div class="form-group">
@@ -287,6 +311,33 @@
           </div>
         </div>
         <div class="form-group" style="margin-top:1rem">
+          <label class="form-label">Album Art (optional)</label>
+          <div id="musicDropZone"
+            style="border:2px dashed rgba(0,255,136,0.25);border-radius:var(--r-md);padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;margin-bottom:.5rem"
+            onclick="document.getElementById('musicFileInput').click()"
+            ondragover="musicDragOver(event)"
+            ondragleave="musicDragLeave(event)"
+            ondrop="musicDrop(event)">
+            <input type="file" id="musicFileInput" accept="image/*" style="display:none" onchange="musicFileSelect(this.files)">
+            <div id="musicDropContent">
+              <div style="font-size:1.5rem;margin-bottom:.3rem">🎵</div>
+              <div style="color:var(--t2);font-size:.82rem;font-weight:600">Drop album art here</div>
+              <div style="color:var(--t4);font-size:.73rem;margin-top:.2rem">or click to browse · JPG, PNG, WebP</div>
+            </div>
+            <div id="musicDropPreview" style="display:none;flex-direction:column;align-items:center;gap:.5rem">
+              <img id="musicDropImg" style="max-height:120px;max-width:100%;border-radius:var(--r-md);border:1px solid var(--border)" src="" alt="">
+              <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;justify-content:center">
+                <span id="musicDropName" style="font-family:var(--font-mono);font-size:.73rem;color:var(--a1)"></span>
+                <button class="admin-action-btn" style="pointer-events:auto" onclick="event.stopPropagation();clearMusicFile()">✕ Remove</button>
+                <button id="musicSaveBtn" class="btn btn-primary btn-sm" style="pointer-events:auto" onclick="event.stopPropagation();saveMusicFile()">💾 Save to assets/music/</button>
+              </div>
+              <div id="musicSaveStatus" style="font-family:var(--font-mono);font-size:.73rem;color:var(--t4)"></div>
+            </div>
+          </div>
+          <input type="text" class="form-input" id="mCover" placeholder="auto-filled after saving, or paste a URL">
+        </div>
+
+        <div class="form-group" style="margin-top:1rem">
           <label class="form-label">Your Note (why this song?)</label>
           <textarea class="form-input form-textarea" id="mNote" placeholder="That late-night ceiling-staring kind of song..." style="min-height:80px"></textarea>
         </div>
@@ -410,6 +461,7 @@ function newPost() {
   document.getElementById('postExcerpt').value = '';
   document.getElementById('postContent').value = '';
   document.getElementById('postPreview').innerHTML = '';
+  clearPostFile();
   document.getElementById('postEditor').style.display = 'block';
   document.getElementById('postEditor').scrollIntoView({ behavior: 'smooth' });
 }
@@ -426,6 +478,7 @@ function editPost(id) {
   document.getElementById('postCover').value   = post.cover || '';
   document.getElementById('postExcerpt').value = post.excerpt || '';
   document.getElementById('postContent').value = post.content || '';
+  clearPostFile();
   updatePreview();
   document.getElementById('postEditor').style.display = 'block';
   document.getElementById('postEditor').scrollIntoView({ behavior: 'smooth' });
@@ -434,6 +487,7 @@ function editPost(id) {
 function cancelEdit() {
   document.getElementById('postEditor').style.display = 'none';
   editingPostId = null;
+  clearPostFile();
 }
 
 function savePost() {
@@ -491,6 +545,156 @@ function insertMd(before, after) {
   ta.selectionEnd   = s + before.length + selected.length;
   ta.focus();
   updatePreview();
+}
+
+/* ── Post Cover Image Upload ────────────────────────────────── */
+let pendingPostFile = null;
+
+function postDragOver(e) {
+  e.preventDefault();
+  const dz = document.getElementById('postDropZone');
+  dz.style.borderColor = 'var(--a1)';
+  dz.style.background  = 'rgba(0,255,136,0.04)';
+}
+function postDragLeave(e) {
+  const dz = document.getElementById('postDropZone');
+  dz.style.borderColor = 'rgba(0,255,136,0.25)';
+  dz.style.background  = '';
+}
+function postDrop(e) {
+  e.preventDefault();
+  postDragLeave(e);
+  if (e.dataTransfer.files.length) postFileSelect(e.dataTransfer.files);
+}
+function postFileSelect(files) {
+  const file = files[0];
+  if (!file || !file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return; }
+  pendingPostFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('postDropImg').src   = ev.target.result;
+    document.getElementById('postDropName').textContent = file.name;
+    document.getElementById('postDropContent').style.display = 'none';
+    document.getElementById('postDropPreview').style.display = 'flex';
+    document.getElementById('postSaveStatus').textContent = '';
+    document.getElementById('postSaveBtn').textContent = '💾 Save to assets/images/';
+  };
+  reader.readAsDataURL(file);
+}
+function clearPostFile() {
+  pendingPostFile = null;
+  document.getElementById('postDropImg').src = '';
+  document.getElementById('postDropContent').style.display = 'block';
+  document.getElementById('postDropPreview').style.display = 'none';
+  document.getElementById('postDropName').textContent = '';
+  document.getElementById('postSaveStatus').textContent = '';
+  document.getElementById('postFileInput').value = '';
+}
+async function savePostFile() {
+  if (!pendingPostFile) return;
+  const statusEl = document.getElementById('postSaveStatus');
+  if ('showSaveFilePicker' in window) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: pendingPostFile.name,
+        startIn: 'documents',
+        types: [{ description: 'Image', accept: { 'image/*': ['.jpg','.jpeg','.png','.gif','.webp'] } }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(pendingPostFile);
+      await writable.close();
+      const savedName = handle.name;
+      document.getElementById('postCover').value = 'assets/images/' + savedName;
+      statusEl.innerHTML = `✓ Saved. Move to <code style="color:var(--a1)">assets/images/</code> if needed, then commit.`;
+      document.getElementById('postSaveBtn').textContent = '✓ Saved';
+      showToast('File saved! Move to assets/images/ and commit.');
+      return;
+    } catch (err) { if (err.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(pendingPostFile);
+  a.download = pendingPostFile.name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  document.getElementById('postCover').value = 'assets/images/' + pendingPostFile.name;
+  statusEl.innerHTML = `Downloaded. Move <code style="color:var(--a1)">${pendingPostFile.name}</code> to <code style="color:var(--a1)">assets/images/</code> and commit.`;
+  document.getElementById('postSaveBtn').textContent = '✓ Downloaded';
+  showToast('File downloaded — move it to assets/images/');
+}
+
+/* ── Music Album Art Upload ─────────────────────────────────── */
+let pendingMusicFile = null;
+
+function musicDragOver(e) {
+  e.preventDefault();
+  const dz = document.getElementById('musicDropZone');
+  dz.style.borderColor = 'var(--a1)';
+  dz.style.background  = 'rgba(0,255,136,0.04)';
+}
+function musicDragLeave(e) {
+  const dz = document.getElementById('musicDropZone');
+  dz.style.borderColor = 'rgba(0,255,136,0.25)';
+  dz.style.background  = '';
+}
+function musicDrop(e) {
+  e.preventDefault();
+  musicDragLeave(e);
+  if (e.dataTransfer.files.length) musicFileSelect(e.dataTransfer.files);
+}
+function musicFileSelect(files) {
+  const file = files[0];
+  if (!file || !file.type.startsWith('image/')) { showToast('Please select an image file', 'error'); return; }
+  pendingMusicFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('musicDropImg').src   = ev.target.result;
+    document.getElementById('musicDropName').textContent = file.name;
+    document.getElementById('musicDropContent').style.display = 'none';
+    document.getElementById('musicDropPreview').style.display = 'flex';
+    document.getElementById('musicSaveStatus').textContent = '';
+    document.getElementById('musicSaveBtn').textContent = '💾 Save to assets/music/';
+  };
+  reader.readAsDataURL(file);
+}
+function clearMusicFile() {
+  pendingMusicFile = null;
+  document.getElementById('musicDropImg').src = '';
+  document.getElementById('musicDropContent').style.display = 'block';
+  document.getElementById('musicDropPreview').style.display = 'none';
+  document.getElementById('musicDropName').textContent = '';
+  document.getElementById('musicSaveStatus').textContent = '';
+  document.getElementById('musicFileInput').value = '';
+}
+async function saveMusicFile() {
+  if (!pendingMusicFile) return;
+  const statusEl = document.getElementById('musicSaveStatus');
+  if ('showSaveFilePicker' in window) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: pendingMusicFile.name,
+        startIn: 'documents',
+        types: [{ description: 'Image', accept: { 'image/*': ['.jpg','.jpeg','.png','.gif','.webp'] } }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(pendingMusicFile);
+      await writable.close();
+      const savedName = handle.name;
+      document.getElementById('mCover').value = 'assets/music/' + savedName;
+      statusEl.innerHTML = `✓ Saved. Move to <code style="color:var(--a1)">assets/music/</code> if needed, then commit.`;
+      document.getElementById('musicSaveBtn').textContent = '✓ Saved';
+      showToast('File saved! Move to assets/music/ and commit.');
+      return;
+    } catch (err) { if (err.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(pendingMusicFile);
+  a.download = pendingMusicFile.name;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  document.getElementById('mCover').value = 'assets/music/' + pendingMusicFile.name;
+  statusEl.innerHTML = `Downloaded. Move <code style="color:var(--a1)">${pendingMusicFile.name}</code> to <code style="color:var(--a1)">assets/music/</code> and commit.`;
+  document.getElementById('musicSaveBtn').textContent = '✓ Downloaded';
+  showToast('File downloaded — move it to assets/music/');
 }
 
 /* ── Gallery + File Upload ──────────────────────────────────── */
@@ -648,6 +852,7 @@ function deleteGalleryItem(id) {
 /* ── Music ──────────────────────────────────────────────────── */
 function toggleMusicForm(show) {
   document.getElementById('musicForm').style.display = show ? 'block' : 'none';
+  if (!show) clearMusicFile();
 }
 
 function addTrack() {
@@ -669,14 +874,15 @@ function addTrack() {
     emoji:   document.getElementById('mEmoji').value.trim() || '🎵',
     tags:    document.getElementById('mTags').value.split(',').map(t => t.trim()).filter(Boolean),
     note:    document.getElementById('mNote').value.trim(),
-    cover:   '',
+    cover:   document.getElementById('mCover').value.trim(),
     streaming
   };
   musicData.tracks.unshift(track);
   saveData('data/music.json', musicData);
   renderAdminMusic();
   toggleMusicForm(false);
-  ['mTitle','mArtist','mAlbum','mYear','mEmoji','mTags','mSpotify','mYoutube','mNote'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  ['mTitle','mArtist','mAlbum','mYear','mEmoji','mTags','mSpotify','mYoutube','mNote','mCover'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+  clearMusicFile();
   showToast('Track added! Export JSON to publish.');
 }
 

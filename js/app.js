@@ -35,14 +35,16 @@
 })();
 
 // ── Reveal on scroll ────────────────────────────────────────
-(function () {
-  const els = document.querySelectorAll('.reveal');
+function setupReveal(root) {
+  const els = root ? root.querySelectorAll('.reveal') : document.querySelectorAll('.reveal');
   if (!els.length) return;
   const io = new IntersectionObserver((entries) => {
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
   }, { threshold: 0.1 });
   els.forEach(el => io.observe(el));
-})();
+}
+window.setupReveal = setupReveal;
+(function () { setupReveal(); })();
 
 // ── Toast ─────────────────────────────────────────────────
 function showToast(msg, type = 'success') {

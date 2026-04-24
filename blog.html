@@ -107,7 +107,7 @@
     el.innerHTML = posts.map(p => `
       <a href="post.html?id=${p.id}" class="post-card" style="text-decoration:none">
         <div class="post-cover">
-          ${p.src ? `<img src="${p.src}" alt="${p.title}">` : `<div class="post-cover-placeholder">${p.coverEmoji || '📖'}</div>`}
+          ${p.cover ? `<img src="${p.cover}" alt="${p.title}">` : `<div class="post-cover-placeholder">${p.coverEmoji || '📖'}</div>`}
         </div>
         <div class="post-body">
           <div class="post-meta">
